@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 function ContainerCard({ container, onToggle, onRemove }) {
+  const [toggling, setToggling] = useState(false)
+  const [removing, setRemoving] = useState(false)
   const isRunning = container.status === 'running'
 
   const formatDate = (isoString) => {
@@ -13,18 +15,37 @@ function ContainerCard({ container, onToggle, onRemove }) {
     })
   }
 
+  const handleToggle = async () => {
+    setToggling(true)
+    try {
+      await onToggle(container.id, container.status)
+    } finally {
+      setToggling(false)
+    }
+  }
+
+  const handleRemove = async () => {
+    setRemoving(true)
+    try {
+      await onRemove(container.id)
+    } finally {
+      setRemoving(false)
+    }
+  }
+
   return (
-    <div className={`container-card ${isRunning ? 'running' : 'stopped'}`}>
+    <div className={`container-card ${isRunning ? 'running' : 'stopped'}${toggling ? ' toggling' : ''}`}>
       <div className="card-header">
         <div className="card-title">
           <span className="status-dot"></span>
           <h3>{container.name}</h3>
         </div>
-        <label className="switch">
+        <label className={`switch${toggling ? ' switch-disabled' : ''}`}>
           <input
             type="checkbox"
             checked={isRunning}
-            onChange={() => onToggle(container.id, container.status)}
+            onChange={handleToggle}
+            disabled={toggling || removing}
           />
           <span className="slider"></span>
         </label>
@@ -53,14 +74,15 @@ function ContainerCard({ container, onToggle, onRemove }) {
 
       <div className="card-footer">
         <span className={`status-badge ${isRunning ? 'status-running' : 'status-stopped'}`}>
-          {isRunning ? '运行中' : '已停止'}
+          {toggling ? '切换中...' : isRunning ? '运行中' : '已停止'}
         </span>
         <button
           className="btn-remove"
-          onClick={() => onRemove(container.id)}
+          onClick={handleRemove}
+          disabled={toggling || removing}
           title="删除容器"
         >
-          🗑️ 删除
+          {removing ? '删除中...' : '🗑️ 删除'}
         </button>
       </div>
     </div>

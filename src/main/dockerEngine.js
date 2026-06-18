@@ -7,8 +7,20 @@ export class DockerEngine {
     this.dataDir = path.join(app.getPath('userData'), 'data')
     this.dataFile = path.join(this.dataDir, 'containers.json')
     this.containers = []
+    this._locks = new Map()
     this._ensureDataFile()
     this._loadContainers()
+  }
+
+  async _acquireLock(id) {
+    while (this._locks.get(id)) {
+      await new Promise(resolve => setTimeout(resolve, 50))
+    }
+    this._locks.set(id, true)
+  }
+
+  _releaseLock(id) {
+    this._locks.delete(id)
   }
 
   _ensureDataFile() {
@@ -56,33 +68,46 @@ export class DockerEngine {
     return container
   }
 
-  startContainer(id) {
-    const container = this.containers.find(c => c.id === id)
-    if (container) {
+  async startContainer(id) {
+    await this._acquireLock(id)
+    try {
+      const container = this.containers.find(c => c.id === id)
+      if (!container) return null
+      if (container.status === 'running') return container
       container.status = 'running'
       this._saveContainers()
       return container
+    } finally {
+      this._releaseLock(id)
     }
-    return null
   }
 
-  stopContainer(id) {
-    const container = this.containers.find(c => c.id === id)
-    if (container) {
+  async stopContainer(id) {
+    await this._acquireLock(id)
+    try {
+      const container = this.containers.find(c => c.id === id)
+      if (!container) return null
+      if (container.status === 'stopped') return container
       container.status = 'stopped'
       this._saveContainers()
       return container
+    } finally {
+      this._releaseLock(id)
     }
-    return null
   }
 
-  removeContainer(id) {
-    const index = this.containers.findIndex(c => c.id === id)
-    if (index !== -1) {
-      const removed = this.containers.splice(index, 1)[0]
-      this._saveContainers()
-      return removed
+  async removeContainer(id) {
+    await this._acquireLock(id)
+    try {
+      const index = this.containers.findIndex(c => c.id === id)
+      if (index !== -1) {
+        const removed = this.containers.splice(index, 1)[0]
+        this._saveContainers()
+        return removed
+      }
+      return null
+    } finally {
+      this._releaseLock(id)
     }
-    return null
   }
 }

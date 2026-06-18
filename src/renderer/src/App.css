@@ -276,6 +276,37 @@ input:checked + .slider:before {
   transform: translateX(20px);
 }
 
+.switch-disabled {
+  pointer-events: none;
+}
+
+.switch-disabled .slider {
+  background-color: #d9d9d9 !important;
+  animation: pulse-slider 1s ease-in-out infinite;
+}
+
+.switch-disabled input:checked + .slider {
+  background-color: #95de64 !important;
+  animation: pulse-slider 1s ease-in-out infinite;
+}
+
+@keyframes pulse-slider {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.container-card.toggling {
+  pointer-events: none;
+  opacity: 0.92;
+}
+
+.btn-remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: #ffd8d2;
+  color: #ffa39e;
+}
+
 .card-body {
   padding: 14px 16px;
   flex: 1;
