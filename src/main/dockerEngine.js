@@ -53,7 +53,40 @@ export class DockerEngine {
     return [...this.containers]
   }
 
+  _extractHostPort(portMapping) {
+    if (!portMapping) return null
+    const parts = portMapping.split(':')
+    if (parts.length >= 1 && parts[0]) {
+      const port = parseInt(parts[0], 10)
+      return isNaN(port) ? null : port
+    }
+    return null
+  }
+
+  _checkPortConflict(hostPort, excludeId = null) {
+    if (!hostPort) return null
+    for (const c of this.containers) {
+      if (excludeId && c.id === excludeId) continue
+      if (c.status !== 'running') continue
+      const existingPort = this._extractHostPort(c.portMapping)
+      if (existingPort === hostPort) {
+        return c
+      }
+    }
+    return null
+  }
+
   createContainer({ image, portMapping, name }) {
+    const hostPort = this._extractHostPort(portMapping)
+    const conflictingContainer = this._checkPortConflict(hostPort)
+    if (conflictingContainer) {
+      const err = new Error(`端口冲突：${hostPort} 端口已被容器 ${conflictingContainer.name} 占用，请更换端口！`)
+      err.code = 'PORT_CONFLICT'
+      err.port = hostPort
+      err.conflictingContainerName = conflictingContainer.name
+      throw err
+    }
+
     const id = this._generateId()
     const container = {
       id,

@@ -5,12 +5,14 @@ function CreateForm({ onCreate }) {
   const [portMapping, setPortMapping] = useState('')
   const [name, setName] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!image.trim()) return
 
     setSubmitting(true)
+    setError('')
     try {
       await onCreate({
         image: image.trim(),
@@ -20,6 +22,8 @@ function CreateForm({ onCreate }) {
       setImage('')
       setPortMapping('')
       setName('')
+    } catch (e) {
+      setError(e.message || '创建失败，请重试')
     } finally {
       setSubmitting(false)
     }
@@ -28,6 +32,12 @@ function CreateForm({ onCreate }) {
   return (
     <div className="create-form">
       <h2>创建容器</h2>
+      {error && (
+        <div className="error-banner">
+          <span className="error-icon">⚠️</span>
+          <span>{error}</span>
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="image">镜像名称 *</label>
