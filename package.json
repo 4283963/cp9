@@ -1,0 +1,23 @@
+{
+  "name": "docker-sandbox-manager",
+  "version": "1.0.0",
+  "description": "轻量级 Docker 容器管理沙盒软件",
+  "main": "out/main/index.js",
+  "author": "sandbox",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "electron": "^28.0.0",
+    "electron-vite": "^2.0.0",
+    "vite": "^5.0.0"
+  }
+}
